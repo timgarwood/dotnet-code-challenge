@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
-
+using System.Threading.Tasks;
 using CodeChallenge.Models;
 
 using CodeCodeChallenge.Tests.Integration.Extensions;
@@ -131,6 +131,47 @@ namespace CodeCodeChallenge.Tests.Integration
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetReportingStructure_JohnLennon_Returns_4()
+        {
+            var response = await _httpClient.GetAsync($"api/employee/structure/16a596ae-edd3-4847-99fe-c4518e82c86f");
+            var lennon = response.DeserializeContent<ReportingStructure>();
+
+            Assert.AreEqual(lennon.NumberOfReports, 4);
+            Assert.AreEqual(lennon.Employee.EmployeeId, "16a596ae-edd3-4847-99fe-c4518e82c86f");
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public async Task GetReportingStructure_RingoStarr_Returns_2()
+        {
+            var response = await _httpClient.GetAsync($"api/employee/structure/03aa1462-ffa9-4978-901b-7c001562cf6f");
+            var ringo = response.DeserializeContent<ReportingStructure>();
+
+            Assert.AreEqual(ringo.NumberOfReports, 2);
+            Assert.AreEqual(ringo.Employee.EmployeeId, "03aa1462-ffa9-4978-901b-7c001562cf6f");
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public async Task GetReportingStructure_GeorgeHarrison_Returns_0()
+        {
+            var response = await _httpClient.GetAsync($"api/employee/structure/c0c2293d-16bd-4603-8e08-638a9d18b22c");
+            var george = response.DeserializeContent<ReportingStructure>();
+
+            Assert.AreEqual(george.NumberOfReports, 0);
+            Assert.AreEqual(george.Employee.EmployeeId, "c0c2293d-16bd-4603-8e08-638a9d18b22c");
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [TestMethod]
+        public async Task GetReportingStructure_InvalidId_Returns_NotFound()
+        {
+            var response = await _httpClient.GetAsync($"api/employee/structure/JasonNewstead");
+
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
     }
 }
