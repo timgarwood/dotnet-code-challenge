@@ -1,4 +1,4 @@
-# Mindex Coding Challenge
+# Coding Challenge
 ## What's Provided
 A simple [.Net 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) web application has been created and bootstrapped 
 with data. The application contains information about all employees at a company. On application start-up, an in-memory 
