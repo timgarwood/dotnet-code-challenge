@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using CodeChallenge.Services;
@@ -78,6 +75,48 @@ namespace CodeChallenge.Controllers
             _employeeService.Replace(existingEmployee, newEmployee);
 
             return Ok(newEmployee);
+        }
+
+        /// <summary>
+        /// Retrieve a Compensation by employee id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("compensation/{id}")]
+        public IActionResult ReadById(string id)
+        {
+            _logger.LogDebug($"received compensation get request for employee {id}");
+
+            var compensation = _employeeService.GetCompensationById(id);
+
+            if (compensation == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(compensation);
+        }
+
+        /// <summary>
+        /// Create a new Compensation for an Employee
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("compensation")]
+        public IActionResult Create([FromBody] CompensationCreateModel model)
+        {
+            _logger.LogDebug($"received compensation create request for employee {model.EmployeeId}");
+
+            var compensation = _employeeService.Create(model);
+
+            if(compensation == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(model);
         }
     }
 }

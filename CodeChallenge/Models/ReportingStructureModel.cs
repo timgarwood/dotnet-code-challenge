@@ -4,7 +4,7 @@
     /// This is the API model object for describing the number of 
     /// direct reports for a given employee
     /// </summary>
-    public class ReportingStructure
+    public class ReportingStructureModel
     {
         /// <summary>
         /// the employee at the top of the reporting structure

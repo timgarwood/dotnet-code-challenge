@@ -1,13 +1,14 @@
 
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CodeChallenge.Models;
 
 using CodeCodeChallenge.Tests.Integration.Extensions;
 using CodeCodeChallenge.Tests.Integration.Helpers;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CodeCodeChallenge.Tests.Integration
@@ -137,18 +138,26 @@ namespace CodeCodeChallenge.Tests.Integration
         public async Task GetReportingStructure_JohnLennon_Returns_4()
         {
             var response = await _httpClient.GetAsync($"api/employee/structure/16a596ae-edd3-4847-99fe-c4518e82c86f");
-            var lennon = response.DeserializeContent<ReportingStructure>();
+            var lennon = response.DeserializeContent<ReportingStructureModel>();
 
             Assert.AreEqual(lennon.NumberOfReports, 4);
             Assert.AreEqual(lennon.Employee.EmployeeId, "16a596ae-edd3-4847-99fe-c4518e82c86f");
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+
+            Assert.AreEqual(lennon.Employee.DirectReports.Count, 2);
+            Assert.AreEqual(lennon.Employee.DirectReports[0].EmployeeId, "b7839309-3348-463b-a7e3-5de1c168beb3");
+            Assert.AreEqual(lennon.Employee.DirectReports[1].EmployeeId, "03aa1462-ffa9-4978-901b-7c001562cf6f");
+            Assert.AreEqual(lennon.Employee.DirectReports[1].DirectReports.Count, 2);
+            Assert.AreEqual(lennon.Employee.DirectReports[1].DirectReports[0].EmployeeId, "62c1084e-6e34-4630-93fd-9153afb65309");
+            Assert.AreEqual(lennon.Employee.DirectReports[1].DirectReports[1].EmployeeId, "c0c2293d-16bd-4603-8e08-638a9d18b22c");
+
         }
 
         [TestMethod]
         public async Task GetReportingStructure_RingoStarr_Returns_2()
         {
             var response = await _httpClient.GetAsync($"api/employee/structure/03aa1462-ffa9-4978-901b-7c001562cf6f");
-            var ringo = response.DeserializeContent<ReportingStructure>();
+            var ringo = response.DeserializeContent<ReportingStructureModel>();
 
             Assert.AreEqual(ringo.NumberOfReports, 2);
             Assert.AreEqual(ringo.Employee.EmployeeId, "03aa1462-ffa9-4978-901b-7c001562cf6f");
@@ -159,7 +168,7 @@ namespace CodeCodeChallenge.Tests.Integration
         public async Task GetReportingStructure_GeorgeHarrison_Returns_0()
         {
             var response = await _httpClient.GetAsync($"api/employee/structure/c0c2293d-16bd-4603-8e08-638a9d18b22c");
-            var george = response.DeserializeContent<ReportingStructure>();
+            var george = response.DeserializeContent<ReportingStructureModel>();
 
             Assert.AreEqual(george.NumberOfReports, 0);
             Assert.AreEqual(george.Employee.EmployeeId, "c0c2293d-16bd-4603-8e08-638a9d18b22c");
@@ -170,6 +179,86 @@ namespace CodeCodeChallenge.Tests.Integration
         public async Task GetReportingStructure_InvalidId_Returns_NotFound()
         {
             var response = await _httpClient.GetAsync($"api/employee/structure/JasonNewstead");
+
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+        }
+
+        [TestMethod]
+        public async Task CreateCompensation_Returns_Created_GetOk()
+        {
+            // Arrange
+            var model = new CompensationCreateModel
+            {
+                EmployeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f",
+                EffectiveDate = new DateOnly(2022, 1, 15),
+                Salary = 120000
+            };
+
+            var model2 = new CompensationCreateModel
+            {
+                EmployeeId = "62c1084e-6e34-4630-93fd-9153afb65309",
+                EffectiveDate = new DateOnly(2000, 3, 22),
+                Salary = 55000
+            };
+
+            var requestContent = new JsonSerialization().ToJson(model);
+            var requestContent2 = new JsonSerialization().ToJson(model2);
+
+
+            var response = await _httpClient.PostAsync($"api/employee/compensation",
+               new StringContent(requestContent, Encoding.UTF8, "application/json"));
+
+            var response2 = await _httpClient.PostAsync($"api/employee/compensation",
+               new StringContent(requestContent2, Encoding.UTF8, "application/json"));
+
+            var compensationModel = response.DeserializeContent<CompensationCreateModel>();
+            var compensationModel2 = response2.DeserializeContent<CompensationCreateModel>();
+
+
+            Assert.AreEqual(compensationModel.EmployeeId, "16a596ae-edd3-4847-99fe-c4518e82c86f");
+            Assert.AreEqual(compensationModel.Salary, 120000);
+            Assert.AreEqual(compensationModel.EffectiveDate.Year, 2022);
+            Assert.AreEqual(compensationModel.EffectiveDate.Month, 1);
+            Assert.AreEqual(compensationModel.EffectiveDate.Day, 15);
+            Assert.AreEqual(compensationModel2.EmployeeId, "62c1084e-6e34-4630-93fd-9153afb65309");
+            Assert.AreEqual(compensationModel2.Salary, 55000);
+            Assert.AreEqual(compensationModel2.EffectiveDate.Year, 2000);
+            Assert.AreEqual(compensationModel2.EffectiveDate.Month, 3);
+            Assert.AreEqual(compensationModel2.EffectiveDate.Day, 22);
+
+            response = await _httpClient.GetAsync($"api/employee/compensation/16a596ae-edd3-4847-99fe-c4518e82c86f");
+            response2 = await _httpClient.GetAsync($"api/employee/compensation/62c1084e-6e34-4630-93fd-9153afb65309");
+
+
+            var compensation = response.DeserializeContent<Compensation>();
+            var compensation2 = response2.DeserializeContent<Compensation>();
+
+            Assert.AreEqual(compensation.EmployeeId, "16a596ae-edd3-4847-99fe-c4518e82c86f");
+            Assert.AreEqual(compensation.Salary, 120000);
+            Assert.AreEqual(compensation.EffectiveDate.Year, 2022);
+            Assert.AreEqual(compensation.EffectiveDate.Month, 1);
+            Assert.AreEqual(compensation.EffectiveDate.Day, 15);
+            Assert.AreEqual(compensation2.EmployeeId, "62c1084e-6e34-4630-93fd-9153afb65309");
+            Assert.AreEqual(compensation2.Salary, 55000);
+            Assert.AreEqual(compensation2.EffectiveDate.Year, 2000);
+            Assert.AreEqual(compensation2.EffectiveDate.Month, 3);
+            Assert.AreEqual(compensation2.EffectiveDate.Day, 22);
+        }
+
+        [TestMethod]
+        public async Task GetCompensation_NoCompensation_Returns_NotFound()
+        {
+            //valid employee, no compensation
+            var response = await _httpClient.GetAsync($"api/employee/compensation/c0c2293d-16bd-4603-8e08-638a9d18b22c");
+
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
+        }
+
+        [TestMethod]
+        public async Task GetCompensation_NoEmployee_Returns_NotFound()
+        {
+            //valid employee, no compensation
+            var response = await _httpClient.GetAsync($"api/employee/compensation/JasonNewstead");
 
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }

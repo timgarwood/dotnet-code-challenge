@@ -65,7 +65,7 @@ namespace CodeChallenge.Services
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public ReportingStructure GetReportingStructureById(String id)
+        public ReportingStructureModel GetReportingStructureById(String id)
         {
             if (String.IsNullOrEmpty(id)) return null;
 
@@ -73,11 +73,41 @@ namespace CodeChallenge.Services
 
             if (topEmployee == null) return null;
 
-            return new ReportingStructure
+            return new ReportingStructureModel
             {
                 Employee = topEmployee,
                 NumberOfReports = GetNumberOfReports(topEmployee)
             };
+        }
+
+        /// <summary>
+        /// Retrieve the Compensation for the given Employee
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Compensation GetCompensationById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+
+            var compensation = _employeeRepository.GetCompensationById(id);
+
+            return compensation;
+        }
+
+        /// <summary>
+        /// Create a new Compensation
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public Compensation Create(CompensationCreateModel model)
+        {
+            if (model == null) return null;
+
+            var compensation = _employeeRepository.Create(model);
+
+            _employeeRepository.SaveAsync().Wait();
+
+            return compensation;
         }
 
         /// <summary>
@@ -92,6 +122,9 @@ namespace CodeChallenge.Services
 
             var sum = 0;
 
+            // this is pretty slow because it creates many database queries
+            // an alternative is to create a stored procedure to do this at the
+            // database level
             foreach (var directReport in rootEmployee.DirectReports)
             {
                 var directReportWithReports = _employeeRepository.GetByIdWithDirectReports(directReport.EmployeeId);

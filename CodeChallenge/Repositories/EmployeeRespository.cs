@@ -32,11 +32,53 @@ namespace CodeChallenge.Repositories
             return _employeeContext.Employees.SingleOrDefault(e => e.EmployeeId == id);
         }
 
+        /// <summary>
+        /// Retrieve the given employee including their direct reports
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public Employee GetByIdWithDirectReports(string id)
         {
             return _employeeContext.Employees
                 .Include(e => e.DirectReports)
                 .SingleOrDefault(e => e.EmployeeId == id);
+        }
+
+        /// <summary>
+        /// Retrieve the Compensation for the given employee
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Compensation GetCompensationById(string id)
+        {
+            var employee = _employeeContext.Employees
+                .Include(e => e.Compensation)
+                .SingleOrDefault(e => e.EmployeeId == id);
+
+            return employee?.Compensation;
+        }
+
+        /// <summary>
+        /// Create a new compensation
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public Compensation Create(CompensationCreateModel model)
+        {
+            var employee = _employeeContext.Employees
+                .SingleOrDefault(e => e.EmployeeId == model.EmployeeId);
+
+            var compensation = new Compensation
+            {
+                Id = Guid.NewGuid().ToString(),
+                Salary = model.Salary,
+                EffectiveDate = model.EffectiveDate,
+                EmployeeId = model.EmployeeId
+            };
+
+            _employeeContext.Compensations.Add(compensation);
+
+            return compensation;
         }
 
         public Task SaveAsync()

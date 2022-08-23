@@ -1,9 +1,5 @@
 ﻿using CodeChallenge.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CodeChallenge.Data
 {
@@ -14,6 +10,21 @@ namespace CodeChallenge.Data
 
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            // define primary key for Compensation
+            builder.Entity<Compensation>()
+                .HasKey(c => c.Id);
+
+            // configure one-to-one relationship between Employee and Compensation
+            builder.Entity<Employee>()
+                .HasOne(e => e.Compensation)
+                .WithOne(c => c.Employee)
+                .HasForeignKey<Compensation>(c => c.EmployeeId);
+        }
+
         public DbSet<Employee> Employees { get; set; }
+
+        public DbSet<Compensation> Compensations { get; set; }
     }
 }
