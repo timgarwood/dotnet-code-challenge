@@ -201,8 +201,17 @@ namespace CodeCodeChallenge.Tests.Integration
                 Salary = 55000
             };
 
+
+            var model3 = new CompensationCreateModel
+            {
+                EmployeeId = "JasonNewstead",
+                EffectiveDate = new DateOnly(2000, 3, 22),
+                Salary = 55000
+            };
+
             var requestContent = new JsonSerialization().ToJson(model);
             var requestContent2 = new JsonSerialization().ToJson(model2);
+            var requestContent3 = new JsonSerialization().ToJson(model3);
 
 
             var response = await _httpClient.PostAsync($"api/employee/compensation",
@@ -210,6 +219,11 @@ namespace CodeCodeChallenge.Tests.Integration
 
             var response2 = await _httpClient.PostAsync($"api/employee/compensation",
                new StringContent(requestContent2, Encoding.UTF8, "application/json"));
+
+            var response3 = await _httpClient.PostAsync($"api/employee/compensation",
+               new StringContent(requestContent3, Encoding.UTF8, "application/json"));
+
+            Assert.AreEqual(response3.StatusCode, HttpStatusCode.NotFound);
 
             var compensationModel = response.DeserializeContent<CompensationCreateModel>();
             var compensationModel2 = response2.DeserializeContent<CompensationCreateModel>();
@@ -262,5 +276,8 @@ namespace CodeCodeChallenge.Tests.Integration
 
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
+
+        
+
     }
 }

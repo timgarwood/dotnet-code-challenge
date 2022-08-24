@@ -71,6 +71,8 @@ namespace CodeChallenge.Repositories
             var employee = _employeeContext.Employees
                 .SingleOrDefault(e => e.EmployeeId == model.EmployeeId);
 
+            if (employee == null) return null;
+
             var compensation = new Compensation
             {
                 Id = Guid.NewGuid().ToString(),
