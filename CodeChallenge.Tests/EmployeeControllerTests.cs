@@ -277,7 +277,66 @@ namespace CodeCodeChallenge.Tests.Integration
             Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
         }
 
-        
+        [TestMethod]
+        public async Task CreateCompensation_2Compensations_Returns_Conflict()
+        {
+            // create an employee and give them 2 compensations
+            // verify that the 2nd compensation request returns Conflict
+            // Arrange
+            var employee = new Employee()
+            {
+                Department = "Metallica",
+                FirstName = "James",
+                LastName = "Hetfield",
+                Position = "Guitar",
+            };
+
+            var requestContent = new JsonSerialization().ToJson(employee);
+
+            // Execute
+            var response = await _httpClient.PostAsync("api/employee",
+               new StringContent(requestContent, Encoding.UTF8, "application/json"));
+
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+
+            var james = response.DeserializeContent<Employee>();
+
+            var compensation1 = new Compensation
+            {
+                EmployeeId = james.EmployeeId,
+                EffectiveDate = new DateOnly(1985, 1, 10),
+                Salary = 11000
+            };
+
+            var compensation2 = new Compensation
+            {
+                EmployeeId = james.EmployeeId,
+                EffectiveDate = new DateOnly(2022, 1, 10),
+                Salary = 50000
+            };
+
+            var compRequest1 = new JsonSerialization().ToJson(compensation1);
+            var compRequest2 = new JsonSerialization().ToJson(compensation2);
+
+            // Execute
+            var compResponse1 = await _httpClient.PostAsync("api/employee/compensation",
+               new StringContent(compRequest1, Encoding.UTF8, "application/json"));
+            var compResponse2 = await _httpClient.PostAsync("api/employee/compensation",
+               new StringContent(compRequest2, Encoding.UTF8, "application/json"));
+
+            Assert.AreEqual(compResponse1.StatusCode, HttpStatusCode.OK);
+            Assert.AreEqual(compResponse2.StatusCode, HttpStatusCode.Conflict);
+
+            compResponse1 = await _httpClient.GetAsync($"api/employee/compensation/{james.EmployeeId}");
+
+            var jamesComp = compResponse1.DeserializeContent<Compensation>();
+
+            Assert.AreEqual(jamesComp.Salary, 11000);
+            Assert.AreEqual(jamesComp.EffectiveDate.Month, 1);
+            Assert.AreEqual(jamesComp.EffectiveDate.Day, 10);
+            Assert.AreEqual(jamesComp.EffectiveDate.Year, 1985);
+
+        }
 
     }
 }

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using CodeChallenge.Services;
 using CodeChallenge.Models;
+using System.Net;
+using CodeChallenge.Exceptions;
 
 namespace CodeChallenge.Controllers
 {
@@ -109,14 +111,25 @@ namespace CodeChallenge.Controllers
         {
             _logger.LogDebug($"received compensation create request for employee {model.EmployeeId}");
 
-            var compensation = _employeeService.Create(model);
-
-            if(compensation == null)
+            try
             {
-                return NotFound();
-            }
+                var compensation = _employeeService.Create(model);
 
-            return Ok(model);
+                if(compensation == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(compensation);
+            }
+            catch(CompensationAlreadyExistsException)
+            {
+                _logger.LogError($"Compensation already exists for employee {model.EmployeeId}");
+                // for now, just return conflict.
+                // in a real API, we might put an exception status code
+                // in the response object
+                return Conflict();
+            }
         }
     }
 }

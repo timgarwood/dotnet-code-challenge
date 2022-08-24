@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CodeChallenge.Models;
 using Microsoft.Extensions.Logging;
 using CodeChallenge.Repositories;
+using CodeChallenge.Exceptions;
 
 namespace CodeChallenge.Services
 {
@@ -102,6 +103,12 @@ namespace CodeChallenge.Services
         public Compensation Create(CompensationCreateModel model)
         {
             if (model == null) return null;
+
+            var employee = _employeeRepository.GetById(model.EmployeeId);
+
+            if (employee == null) return null;
+
+            if (employee.Compensation != null) throw new CompensationAlreadyExistsException();
 
             var compensation = _employeeRepository.Create(model);
 
